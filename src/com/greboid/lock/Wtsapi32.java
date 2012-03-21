@@ -30,7 +30,7 @@ import com.sun.jna.win32.W32APIOptions;
 /**
  * Provides access to the w32 Wtsapi32 library.
  */
-public interface Wtsapi32 extends StdCallLibrary {
+interface Wtsapi32 extends StdCallLibrary {
 
     /**
      * All session notifications are to be received.

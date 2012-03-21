@@ -31,7 +31,7 @@ import lombok.AllArgsConstructor;
  * Listener firing window proc callback.
  */
 @AllArgsConstructor
-public class WindowProcCallbackImpl implements WndProcCallback {
+class WindowProcCallbackImpl implements WndProcCallback {
 
     /**
      * Replaced window proc callback.

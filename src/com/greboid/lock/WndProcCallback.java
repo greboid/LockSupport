@@ -32,7 +32,7 @@ import com.sun.jna.win32.StdCallLibrary;
 /**
  * Passes message information to the specified window procedure.
  */
-public interface WndProcCallback extends StdCallLibrary.StdCallCallback, Callback {
+interface WndProcCallback extends StdCallLibrary.StdCallCallback, Callback {
 
     /**
      * Passes message information to the specified window procedure.

@@ -33,7 +33,7 @@ import com.sun.jna.win32.W32APIOptions;
 /**
  * Provides access to the w32 user32 library.
  */
-public interface User32 extends com.sun.jna.platform.win32.User32 {
+interface User32 extends com.sun.jna.platform.win32.User32 {
 
     /**
      * Pre-existing User32 instance.
