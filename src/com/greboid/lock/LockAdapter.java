@@ -106,12 +106,22 @@ public class LockAdapter {
      */
     private void attach() {
         checkHandle();
-        oldWindowProc = User32.INSTANCE.GetWindowLongPtr(hwnd,
-                User32.GWL_WNDPROC);
+        try {
+            oldWindowProc = User32.INSTANCE.GetWindowLongPtr(hwnd,
+                    User32.GWL_WNDPROC);
+        } catch (UnsatisfiedLinkError ex) {
+            oldWindowProc = new LONG_PTR(User32.INSTANCE.GetWindowLong(hwnd,
+                    User32.GWL_WNDPROC));
+        }
         Wtsapi32.INSTANCE.WTSRegisterSessionNotification(hwnd,
                 Wtsapi32.NOTIFY_FOR_THIS_SESSION);
-        User32.INSTANCE.SetWindowLongPtr(hwnd, User32.GWLP_WNDPROC,
-                new WindowProcCallbackImpl(oldWindowProc, this));
+        try {
+            User32.INSTANCE.SetWindowLongPtr(hwnd, User32.GWLP_WNDPROC,
+                    new WindowProcCallbackImpl(oldWindowProc, this));
+        } catch (UnsatisfiedLinkError ex) {
+            User32.INSTANCE.SetWindowLong(hwnd, User32.GWLP_WNDPROC,
+                    new WindowProcCallbackImpl(oldWindowProc, this));
+        }
         listening = true;
     }
 
@@ -121,8 +131,13 @@ public class LockAdapter {
     private void detach() {
         checkHandle();
         Wtsapi32.INSTANCE.WTSUnRegisterSessionNotification(hwnd);
-        User32.INSTANCE.SetWindowLongPtr(hwnd, User32.GWLP_WNDPROC,
-                oldWindowProc);
+        try {
+            User32.INSTANCE.SetWindowLongPtr(hwnd, User32.GWLP_WNDPROC,
+                    oldWindowProc);
+        } catch (UnsatisfiedLinkError ex) {
+            User32.INSTANCE.SetWindowLong(hwnd, User32.GWLP_WNDPROC,
+                    oldWindowProc);
+        }
         listening = false;
     }
 }

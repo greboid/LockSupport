@@ -23,7 +23,9 @@
 package com.greboid.lock;
 
 import com.sun.jna.Callback;
+import com.sun.jna.LastErrorException;
 import com.sun.jna.Native;
+import com.sun.jna.Pointer;
 import com.sun.jna.platform.win32.BaseTSD.LONG_PTR;
 import com.sun.jna.platform.win32.WinDef;
 import com.sun.jna.win32.W32APIOptions;
@@ -52,7 +54,32 @@ public interface User32 extends com.sun.jna.platform.win32.User32 {
      *
      * @return Returns 0 on success, otherwise returns the error value
      */
-    public int SetWindowLongPtr(WinDef.HWND hWnd, int nIndex, Callback callback);
+    public int SetWindowLongPtr(WinDef.HWND hWnd, int nIndex, Callback callback)
+            throws LastErrorException;
+
+    /**
+     * Replaces a callback of the specified attribute.
+     *
+     * @param hWnd A handle to the window procedure to receive the message.
+     * @param nIndex Value to be set
+     * @param callback Replacement callback
+     *
+     * @return Returns 0 on success, otherwise returns the error value
+     */
+    public int SetWindowLong(WinDef.HWND hWnd, int nIndex, Callback callback)
+            throws LastErrorException;
+
+    /**
+     * Replaces a callback of the specified attribute.
+     *
+     * @param hWnd A handle to the window procedure to receive the message.
+     * @param nIndex Value to be set
+     * @param callback Replacement callback
+     *
+     * @return Returns 0 on success, otherwise returns the error value
+     */
+    public int SetWindowLong(WinDef.HWND hWnd, int nIndex, LONG_PTR callback)
+            throws LastErrorException;
 
     /**
      * Passes message information to the specified window procedure.
@@ -67,4 +94,9 @@ public interface User32 extends com.sun.jna.platform.win32.User32 {
      */
     public WinDef.LRESULT CallWindowProc(LONG_PTR lpPrevWndFunc,
             HWND hWnd, int Msg, WPARAM wParam, LPARAM lParam);
+
+    public HWND CreateWindowEx(final int dwExStyle, final String lpClassName,
+            final String lpWindowName, final int dwStyle, final int x,
+            final int y, final int nWidth, final int nHeight, final int parent,
+            final int hMenu, final int hInstance, final Pointer lpParam);
 }
