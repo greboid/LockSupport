@@ -25,12 +25,16 @@ package com.greboid.lock;
 import com.sun.jna.Native;
 import com.sun.jna.platform.win32.BaseTSD.LONG_PTR;
 import com.sun.jna.platform.win32.WinDef.HWND;
+import com.sun.jna.platform.win32.WinUser.MSG;
 
 import java.awt.Window;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.io.IOException;
 
 import lombok.ListenerSupport;
+
+import javax.swing.JFrame;
 
 /**
  * Adds support for listening to Window session lock/unlock events.
@@ -38,14 +42,17 @@ import lombok.ListenerSupport;
 @ListenerSupport(value = LockListener.class)
 public class LockAdapter {
 
+public static final int SW_HIDE = 0;
+public static final int SW_SHOW = 5;
+public static final int HWND_MESSAGE = -3;
+public static final int WS_EX_NOACTIVATE = 0x08000000;
+public static final int WS_DISABLED = 0x08000000;
+public static final int CS_GLOBALCLASS = 0x4000;
+    
     /**
      * Are we actively listening to session events.
      */
     private boolean listening = false;
-    /**
-     * Java window to receive message.
-     */
-    private final Window window;
     /**
      * Native window handle for the java window.
      */
@@ -60,34 +67,18 @@ public class LockAdapter {
      *
      * @param window Window to register listener with
      */
-    public LockAdapter(final Window window) {
-        this.window = window;
+    public LockAdapter() {
+        
+    }
+    
+    public void start() {
+        new Thread(new Runnable() {
 
-        if (window.isDisplayable()) {
-            attach();
-        }
-        window.addComponentListener(new ComponentAdapter() {
-
-            /**
-             * {@inheritDoc}
-             */
             @Override
-            public void componentShown(final ComponentEvent e) {
-                if (!listening) {
-                    attach();
-                }
+            public void run() {
+                attach();
             }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public void componentHidden(final ComponentEvent e) {
-                if (listening) {
-                    detach();
-                }
-            }
-        });
+        }).start();
     }
 
     /**
@@ -95,8 +86,9 @@ public class LockAdapter {
      */
     private void checkHandle() {
         if (hwnd == null) {
-            HWND hWnd = new HWND();
-            hWnd.setPointer(Native.getWindowPointer(window));
+            HWND hWnd = User32.INSTANCE.CreateWindowEx(WS_EX_NOACTIVATE, "STATIC",
+                    "Session Info", WS_DISABLED, 0, 0, 100, 100,
+                    0, 0, CS_GLOBALCLASS, null);
             this.hwnd = hWnd;
         }
     }
@@ -106,23 +98,34 @@ public class LockAdapter {
      */
     private void attach() {
         checkHandle();
-        try {
-            oldWindowProc = User32.INSTANCE.GetWindowLongPtr(hwnd,
-                    User32.GWL_WNDPROC);
-        } catch (UnsatisfiedLinkError ex) {
-            oldWindowProc = new LONG_PTR(User32.INSTANCE.GetWindowLong(hwnd,
-                    User32.GWL_WNDPROC));
+        
+        MSG msg = new MSG();
+        while (User32.INSTANCE.GetMessage(msg, hwnd, 0, 0)>0) {
+            User32.INSTANCE.TranslateMessage(msg);
+            User32.INSTANCE.DispatchMessage(msg);
+            
+            if (!listening) {
+                try {
+                    oldWindowProc = User32.INSTANCE.GetWindowLongPtr(hwnd,
+                            User32.GWL_WNDPROC);
+                } catch (UnsatisfiedLinkError ex) {
+                    ex.printStackTrace();
+                    oldWindowProc = new LONG_PTR(User32.INSTANCE.GetWindowLong(hwnd,
+                            User32.GWL_WNDPROC));
+                }
+                Wtsapi32.INSTANCE.WTSRegisterSessionNotification(hwnd,
+                        Wtsapi32.NOTIFY_FOR_THIS_SESSION);
+                try {
+                    User32.INSTANCE.SetWindowLongPtr(hwnd, User32.GWLP_WNDPROC,
+                            new WindowProcCallbackImpl(oldWindowProc, this));
+                } catch (UnsatisfiedLinkError ex) {
+                    ex.printStackTrace();
+                    User32.INSTANCE.SetWindowLong(hwnd, User32.GWLP_WNDPROC,
+                            new WindowProcCallbackImpl(oldWindowProc, this));
+                }
+                listening = true;
+            }
         }
-        Wtsapi32.INSTANCE.WTSRegisterSessionNotification(hwnd,
-                Wtsapi32.NOTIFY_FOR_THIS_SESSION);
-        try {
-            User32.INSTANCE.SetWindowLongPtr(hwnd, User32.GWLP_WNDPROC,
-                    new WindowProcCallbackImpl(oldWindowProc, this));
-        } catch (UnsatisfiedLinkError ex) {
-            User32.INSTANCE.SetWindowLong(hwnd, User32.GWLP_WNDPROC,
-                    new WindowProcCallbackImpl(oldWindowProc, this));
-        }
-        listening = true;
     }
 
     /**
@@ -139,5 +142,24 @@ public class LockAdapter {
                     oldWindowProc);
         }
         listening = false;
+    }
+    
+    public static void main(final String... args) throws IOException {
+        final LockAdapter adapter =new LockAdapter();
+        adapter.addLockListener(new LockListener() {
+
+            @Override
+            public void locked() {
+                System.out.println("locked");
+            }
+
+            @Override
+            public void unlocked() {
+                System.out.println("unlocked");
+            }
+        });
+        
+        adapter.start();
+        System.in.read();
     }
 }

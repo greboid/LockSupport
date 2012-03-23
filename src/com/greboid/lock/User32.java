@@ -99,4 +99,5 @@ interface User32 extends com.sun.jna.platform.win32.User32 {
             final String lpWindowName, final int dwStyle, final int x,
             final int y, final int nWidth, final int nHeight, final int parent,
             final int hMenu, final int hInstance, final Pointer lpParam);
+
 }
