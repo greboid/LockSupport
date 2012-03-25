@@ -25,7 +25,6 @@ package com.greboid.lock;
 import com.sun.jna.platform.win32.WinDef.HWND;
 import com.sun.jna.platform.win32.WinUser.MSG;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -59,7 +58,6 @@ public class LockAdapter {
      * Starts this lock adapter listening for lock events.
      */
     private void start() {
-        System.out.println("starting");
         new Thread(new Runnable() {
 
             @Override
@@ -119,23 +117,6 @@ public class LockAdapter {
         }
     }
 
-    public static void main(final String... args) throws IOException {
-        LockAdapter la = new LockAdapter();
-        la.addLockListener(new LockListener() {
-
-            @Override
-            public void locked() {
-                System.out.println("locked");
-            }
-
-            @Override
-            public void unlocked() {
-                System.out.println("unlocked");
-            }
-        });
-        System.in.read();
-    }
-
     /**
      * Detaches this listener from its window.
      */
@@ -153,7 +134,6 @@ public class LockAdapter {
      * @param l Lock listener
      */
     public void addLockListener(final LockListener l) {
-        System.out.println("adding listener");
         if (!listeners.contains(l)) {
             listeners.add(l);
         }
@@ -178,7 +158,6 @@ public class LockAdapter {
      * Triggers locked method on all listeners.
      */
     void fireLocked() {
-        System.out.println("firing lock");
         for (LockListener l : listeners) {
             l.locked();
         }
@@ -188,7 +167,6 @@ public class LockAdapter {
      * Triggers unlocked method on all listeners.
      */
     void fireUnlocked() {
-        System.out.println("firing unlock");
         for (LockListener l : listeners) {
             l.unlocked();
         }
