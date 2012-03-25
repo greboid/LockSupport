@@ -25,12 +25,9 @@ package com.greboid.lock;
 import com.sun.jna.platform.win32.BaseTSD.LONG_PTR;
 import com.sun.jna.platform.win32.WinDef;
 
-import lombok.AllArgsConstructor;
-
 /**
  * Listener firing window proc callback.
  */
-@AllArgsConstructor
 class WindowProcCallbackImpl implements WndProcCallback {
 
     /**
@@ -41,6 +38,19 @@ class WindowProcCallbackImpl implements WndProcCallback {
      * Lock Adapter instance to fire listener on.
      */
     private final LockAdapter lockAdapter;
+
+    /**
+     * Creates a new window procedure callback that fires listeners in
+     * LockAdapter on session lock and unlock events.
+     *
+     * @param oldWindowProc Original window procedure callback
+     * @param lockAdapter Lock Adapter
+     */
+    WindowProcCallbackImpl(final LONG_PTR oldWindowProc,
+            final LockAdapter lockAdapter) {
+        this.oldWindowProc = oldWindowProc;
+        this.lockAdapter = lockAdapter;
+    }
 
     /**
      * {@inheritDoc}

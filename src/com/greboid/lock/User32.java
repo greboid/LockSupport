@@ -36,6 +36,18 @@ import com.sun.jna.win32.W32APIOptions;
 interface User32 extends com.sun.jna.platform.win32.User32 {
 
     /**
+     * Creates a window that cannot be activated by the user.
+     */
+    public static final int WS_EX_NOACTIVATE = 0x08000000;
+    /**
+     * The window is initially disabled.
+     */
+    public static final int WS_DISABLED = 0x08000000;
+    /**
+     * Indicates that the window class is an application global class.
+     */
+    public static final int CS_GLOBALCLASS = 0x4000;
+    /**
      * Pre-existing User32 instance.
      */
     public static final User32 INSTANCE = (User32) Native.loadLibrary("user32",
@@ -100,4 +112,5 @@ interface User32 extends com.sun.jna.platform.win32.User32 {
             final int y, final int nWidth, final int nHeight, final int parent,
             final int hMenu, final int hInstance, final Pointer lpParam);
 
+    public boolean DestroyWindow(HWND hWnd);
 }
