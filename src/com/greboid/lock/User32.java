@@ -22,11 +22,8 @@
 
 package com.greboid.lock;
 
-import com.sun.jna.Callback;
-import com.sun.jna.LastErrorException;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
-import com.sun.jna.platform.win32.BaseTSD.LONG_PTR;
 import com.sun.jna.win32.W32APIOptions;
 
 /**
@@ -55,57 +52,6 @@ interface User32 extends com.sun.jna.platform.win32.User32 {
      * Sets a new address for the window procedure.
      */
     public static final int GWLP_WNDPROC = -4;
-
-    /**
-     * Replaces a callback of the specified attribute.
-     *
-     * @param hWnd A handle to the window procedure to receive the message.
-     * @param nIndex Value to be set
-     * @param callback Replacement callback
-     *
-     * @return Returns 0 on success, otherwise returns the error value
-     */
-    public int SetWindowLongPtr(HWND hWnd, int nIndex, Callback callback)
-            throws LastErrorException;
-
-    /**
-     * Replaces a callback of the specified attribute.
-     *
-     * @param hWnd A handle to the window procedure to receive the message.
-     * @param nIndex Value to be set
-     * @param callback Replacement callback
-     *
-     * @return Returns 0 on success, otherwise returns the error value
-     */
-    public int SetWindowLong(HWND hWnd, int nIndex, Callback callback)
-            throws LastErrorException;
-
-    /**
-     * Replaces a callback of the specified attribute.
-     *
-     * @param hWnd A handle to the window procedure to receive the message.
-     * @param nIndex Value to be set
-     * @param callback Replacement callback
-     *
-     * @return Returns 0 on success, otherwise returns the error value
-     */
-    public int SetWindowLong(HWND hWnd, int nIndex, LONG_PTR callback)
-            throws LastErrorException;
-
-    /**
-     * Passes message information to the specified window procedure.
-     *
-     * @param lpPrevWndFunc The previous window procedure.
-     * @param hWnd A handle to the window procedure to receive the message.
-     * @param Msg The message.
-     * @param wParam Additional message-specific information.
-     * @param lParam Additional message-specific information.
-     *
-     * @return The return value specifies the result of the message processing
-     * and depends on the message sent.
-     */
-    public LRESULT CallWindowProc(LONG_PTR lpPrevWndFunc,
-            HWND hWnd, int Msg, WPARAM wParam, LPARAM lParam);
 
     /**
      * Creates an overlapped, pop-up, or child window with an extended window

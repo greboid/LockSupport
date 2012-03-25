@@ -22,10 +22,10 @@
 
 package com.greboid.lock;
 
-import com.sun.jna.platform.win32.BaseTSD.LONG_PTR;
 import com.sun.jna.platform.win32.WinDef.HWND;
 import com.sun.jna.platform.win32.WinUser.MSG;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -46,10 +46,6 @@ public class LockAdapter {
      * Native window handle for the java window.
      */
     private HWND hwnd;
-    /**
-     * Stores the window proc being replaced by this listener.
-     */
-    private LONG_PTR oldWindowProc;
 
     /**
      * Adds support to listen to Windows session lock/unlock events.
@@ -63,6 +59,7 @@ public class LockAdapter {
      * Starts this lock adapter listening for lock events.
      */
     private void start() {
+        System.out.println("starting");
         new Thread(new Runnable() {
 
             @Override
@@ -98,30 +95,45 @@ public class LockAdapter {
         checkHandle();
 
         if (!listening) {
-            try {
-                oldWindowProc = User32.INSTANCE.GetWindowLongPtr(hwnd,
-                        User32.GWL_WNDPROC);
-            } catch (UnsatisfiedLinkError ex) {
-                oldWindowProc = new LONG_PTR(User32.INSTANCE.GetWindowLong(hwnd,
-                        User32.GWL_WNDPROC));
-            }
             Wtsapi32.INSTANCE.WTSRegisterSessionNotification(hwnd,
                     Wtsapi32.NOTIFY_FOR_THIS_SESSION);
-            try {
-                User32.INSTANCE.SetWindowLongPtr(hwnd, User32.GWLP_WNDPROC,
-                        new WindowProcCallbackImpl(oldWindowProc, this));
-            } catch (UnsatisfiedLinkError ex) {
-                User32.INSTANCE.SetWindowLong(hwnd, User32.GWLP_WNDPROC,
-                        new WindowProcCallbackImpl(oldWindowProc, this));
-            }
             listening = true;
         }
 
         MSG msg = new MSG();
         while (listening && User32.INSTANCE.GetMessage(msg, hwnd, 0, 0) > 0) {
+            if (msg.message == Wtsapi32.WTS_SESSION_CHANGE) {
+                switch (msg.wParam.intValue()) {
+                    case 7:
+                        fireLocked();
+                        break;
+                    case 8:
+                        fireUnlocked();
+                        break;
+                    default:
+                        break;
+                }
+            }
             User32.INSTANCE.TranslateMessage(msg);
             User32.INSTANCE.DispatchMessage(msg);
         }
+    }
+
+    public static void main(final String... args) throws IOException {
+        LockAdapter la = new LockAdapter();
+        la.addLockListener(new LockListener() {
+
+            @Override
+            public void locked() {
+                System.out.println("locked");
+            }
+
+            @Override
+            public void unlocked() {
+                System.out.println("unlocked");
+            }
+        });
+        System.in.read();
     }
 
     /**
@@ -130,13 +142,6 @@ public class LockAdapter {
     private void detach() {
         checkHandle();
         Wtsapi32.INSTANCE.WTSUnRegisterSessionNotification(hwnd);
-        try {
-            User32.INSTANCE.SetWindowLongPtr(hwnd, User32.GWLP_WNDPROC,
-                    oldWindowProc);
-        } catch (UnsatisfiedLinkError ex) {
-            User32.INSTANCE.SetWindowLong(hwnd, User32.GWLP_WNDPROC,
-                    oldWindowProc);
-        }
         User32.INSTANCE.DestroyWindow(hwnd);
         hwnd = null;
         listening = false;
@@ -148,6 +153,7 @@ public class LockAdapter {
      * @param l Lock listener
      */
     public void addLockListener(final LockListener l) {
+        System.out.println("adding listener");
         if (!listeners.contains(l)) {
             listeners.add(l);
         }
@@ -172,6 +178,7 @@ public class LockAdapter {
      * Triggers locked method on all listeners.
      */
     void fireLocked() {
+        System.out.println("firing lock");
         for (LockListener l : listeners) {
             l.locked();
         }
@@ -181,6 +188,7 @@ public class LockAdapter {
      * Triggers unlocked method on all listeners.
      */
     void fireUnlocked() {
+        System.out.println("firing unlock");
         for (LockListener l : listeners) {
             l.unlocked();
         }
