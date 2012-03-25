@@ -26,7 +26,6 @@ import com.sun.jna.platform.win32.BaseTSD.LONG_PTR;
 import com.sun.jna.platform.win32.WinDef.HWND;
 import com.sun.jna.platform.win32.WinUser.MSG;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -60,7 +59,7 @@ public class LockAdapter {
     public LockAdapter() {
     }
 
-    public void start() {
+    private void start() {
         new Thread(new Runnable() {
 
             @Override
@@ -68,6 +67,11 @@ public class LockAdapter {
                 attach();
             }
         }).start();
+    }
+
+    private void stop() {
+        listening = false;
+        detach();
     }
 
     /**
@@ -108,7 +112,7 @@ public class LockAdapter {
         }
 
         MSG msg = new MSG();
-        while (User32.INSTANCE.GetMessage(msg, hwnd, 0, 0) > 0) {
+        while (listening && User32.INSTANCE.GetMessage(msg, hwnd, 0, 0) > 0) {
             User32.INSTANCE.TranslateMessage(msg);
             User32.INSTANCE.DispatchMessage(msg);
         }
@@ -128,26 +132,8 @@ public class LockAdapter {
                     oldWindowProc);
         }
         User32.INSTANCE.DestroyWindow(hwnd);
+        hwnd = null;
         listening = false;
-    }
-
-    public static void main(final String... args) throws IOException {
-        final LockAdapter adapter = new LockAdapter();
-        adapter.addLockListener(new LockListener() {
-
-            @Override
-            public void locked() {
-                System.out.println("locked");
-            }
-
-            @Override
-            public void unlocked() {
-                System.out.println("unlocked");
-            }
-        });
-
-        adapter.start();
-        System.in.read();
     }
 
     /**
@@ -159,6 +145,9 @@ public class LockAdapter {
         if (!listeners.contains(l)) {
             listeners.add(l);
         }
+        if (!listeners.isEmpty()) {
+            start();
+        }
     }
 
     /**
@@ -168,6 +157,9 @@ public class LockAdapter {
      */
     public void removeLockListener(final LockListener l) {
         listeners.remove(l);
+        if (listeners.isEmpty()) {
+            stop();
+        }
     }
 
     /**

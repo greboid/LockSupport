@@ -27,7 +27,6 @@ import com.sun.jna.LastErrorException;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.platform.win32.BaseTSD.LONG_PTR;
-import com.sun.jna.platform.win32.WinDef;
 import com.sun.jna.win32.W32APIOptions;
 
 /**
@@ -66,7 +65,7 @@ interface User32 extends com.sun.jna.platform.win32.User32 {
      *
      * @return Returns 0 on success, otherwise returns the error value
      */
-    public int SetWindowLongPtr(WinDef.HWND hWnd, int nIndex, Callback callback)
+    public int SetWindowLongPtr(HWND hWnd, int nIndex, Callback callback)
             throws LastErrorException;
 
     /**
@@ -78,7 +77,7 @@ interface User32 extends com.sun.jna.platform.win32.User32 {
      *
      * @return Returns 0 on success, otherwise returns the error value
      */
-    public int SetWindowLong(WinDef.HWND hWnd, int nIndex, Callback callback)
+    public int SetWindowLong(HWND hWnd, int nIndex, Callback callback)
             throws LastErrorException;
 
     /**
@@ -90,7 +89,7 @@ interface User32 extends com.sun.jna.platform.win32.User32 {
      *
      * @return Returns 0 on success, otherwise returns the error value
      */
-    public int SetWindowLong(WinDef.HWND hWnd, int nIndex, LONG_PTR callback)
+    public int SetWindowLong(HWND hWnd, int nIndex, LONG_PTR callback)
             throws LastErrorException;
 
     /**
@@ -102,15 +101,47 @@ interface User32 extends com.sun.jna.platform.win32.User32 {
      * @param wParam Additional message-specific information.
      * @param lParam Additional message-specific information.
      *
-     * @return
+     * @return The return value specifies the result of the message processing
+     * and depends on the message sent.
      */
-    public WinDef.LRESULT CallWindowProc(LONG_PTR lpPrevWndFunc,
+    public LRESULT CallWindowProc(LONG_PTR lpPrevWndFunc,
             HWND hWnd, int Msg, WPARAM wParam, LPARAM lParam);
 
-    public HWND CreateWindowEx(final int dwExStyle, final String lpClassName,
-            final String lpWindowName, final int dwStyle, final int x,
-            final int y, final int nWidth, final int nHeight, final int parent,
-            final int hMenu, final int hInstance, final Pointer lpParam);
+    /**
+     * Creates an overlapped, pop-up, or child window with an extended window
+     * style; otherwise, this function is identical to the CreateWindow function.
+     *
+     * @param dwExStyle The extended window style of the window being created.
+     * @param lpClassName Class name previously registered by RegisterClass,
+     * RegisterClassEx or a system class name.
+     * @param lpWindowName The window name.
+     * @param dwStyle The style of the window being created.
+     * @param x The initial horizontal position of the window.
+     * @param y The initial vertical position of the window.
+     * @param nWidth The width, in device units, of the window.
+     * @param nHeight The height, in device units, of the window.
+     * @param parent A handle to the parent or owner window of the window being
+     * created.
+     * @param hMenu A handle to a menu, or specifies a child-window identifier,
+     * depending on the window style.
+     * @param hInstance A handle to the instance of the module to be associated
+     * with the window.
+     * @param lpParam Pointer to a value to be passed to the window through
+     * the CREATESTRUCT structure (lpCreateParams member) pointed to by the
+     * lParam param of the WM_CREATE message.
+     *
+     * @return New window handle or null if call failed
+     */
+    public HWND CreateWindowEx(int dwExStyle, String lpClassName,
+            String lpWindowName, int dwStyle, int x, int y, final int nWidth,
+            int nHeight, int parent, int hMenu, int hInstance, Pointer lpParam);
 
+    /**
+     * Destroys the specified window.
+     *
+     * @param hWnd A handle to the window to be destroyed.
+     *
+     * @return If the function succeeds, the return value is nonzero.
+     */
     public boolean DestroyWindow(HWND hWnd);
 }
