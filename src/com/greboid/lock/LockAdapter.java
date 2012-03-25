@@ -59,6 +59,9 @@ public class LockAdapter {
     public LockAdapter() {
     }
 
+    /**
+     * Starts this lock adapter listening for lock events.
+     */
     private void start() {
         new Thread(new Runnable() {
 
@@ -69,6 +72,9 @@ public class LockAdapter {
         }).start();
     }
 
+    /**
+     * Stops this lock adapter listening for lock events.
+     */
     private void stop() {
         listening = false;
         detach();
